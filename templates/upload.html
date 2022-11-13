@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+{% block body %}
+<title>Upload new File</title>
+<a href="/"> Main Page </a>
+    <h1>Upload new File</h1>
+    <form method=post enctype=multipart/form-data>
+      <input type=file name=file>
+      <p>select a service: 
+      <input type="radio" name="service" id="yandex-music" value="yandex-music"> Yandex Music </input></p>
+      <br>
+      <input type=submit value=Upload>
+    </form>
+{% endblock %}

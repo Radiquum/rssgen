@@ -2,13 +2,11 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException, UnknownMethodException
 from time import sleep
+import os
 import logging
 logger = logging.getLogger('application')
 # > Release Parser:
 #options.add_argument("--disable-gpu")
-
-from webdriver_manager.firefox import GeckoDriverManager
-from webdriver_manager.microsoft import EdgeChromiumDriverManager
 
 def read_cookies(p):
     cookies = []
@@ -22,15 +20,10 @@ def read_cookies(p):
             cookies.append({'name': k[-2], 'value': k[-1], 'expiry': int(k[-3])})
     return cookies    
     
-def fetch_new_releases(cookie_file=None, username=None, fetch=50):
+def fetch_new_releases(cookie_file=None, username=None, fetch=25):
     # sourcery skip: for-append-to-extend
     logger.info('---------[Updating Yandex.Music New Releases Info]---------')
     # try:
-    #     from selenium.webdriver.edge.options import Options
-    #     options = Options()
-    #     options.page_load_strategy = 'eager'
-    #     options.add_argument("--headless")
-    #     driver = webdriver.Edge(EdgeChromiumDriverManager().install(), options=options)
     # except Exception:
     #     from selenium.webdriver.firefox.options import Options
     #     options = Options()
@@ -52,7 +45,15 @@ def fetch_new_releases(cookie_file=None, username=None, fetch=50):
     driver = webdriver.Remote(
        command_executor="http://rss-selenium-firefox:4444/wd/hub",
        desired_capabilities=capabilities)
+    
+#from webdriver_manager.firefox import GeckoDriverManager
+#from webdriver_manager.microsoft import EdgeChromiumDriverManager
 
+#     from selenium.webdriver.edge.options import Options
+#     options = Options()
+#     options.add_argument("--headless")
+#     driver = webdriver.Edge(EdgeChromiumDriverManager().install(), options=options)
+    
     count = 0
     driver.implicitly_wait(2)
     driver.get('https://music.yandex.ru/new-releases')
@@ -97,18 +98,21 @@ import datetime
 from genrss import GenRSS
 
 def generate_new_releases_feed(username=None, df=None):
+    from app import RSS_FOLDER
+    if username is None:
+        username = 'Anonymous'
     logger.info('---------[Creating Yandex.Music New Releases Feed]---------')
-    
-    feed = GenRSS(title=f'Yandex Music New Releases for {username}',
+
+    feed = GenRSS(title=f'Yandex Music | New Releases for {username}',
               site_url='https://music.yandex.ru/new-releases',
-              feed_url=f'https://python-rss.server.paws.cf/yandex-music/new-releases?username={username}')
+              feed_url=f'https://python-rss.server.paws.cf/{RSS_FOLDER}/yandex-music/new-releases?username={username}')
 
     for album in df:
         artists = []
         for artist in album[3]:
             artists.extend([f"<a href='{artist[1]}'>{artist[0]}</a>"])
         artists = ', '.join(map(str,artists))
-        
+
         feed.item(title=f'New Release: {album[4]} - {album[1]}',
                 description=f'<img src="{album[0]}"/> <br> New Release: {artists} - <a href="{album[2]}">{album[1]}</a>',
                 url=album[2],
@@ -116,8 +120,8 @@ def generate_new_releases_feed(username=None, df=None):
                 categories=[],
                 pub_date=datetime.datetime.now())
 
-
-    with open(f'rss/yandexmusic-{username}.xml', 'w', encoding='utf-8') as file:
+    os.makedirs(f'{RSS_FOLDER}/yandex-music/new-releases', exist_ok=True)
+    with open(f"{RSS_FOLDER}/yandex-music/new-releases/{username}.xml", 'w', encoding='utf-8') as file:
         file.write(feed.xml(pretty=True))
 
     logger.info('---------[Completed Creating Yandex.Music New Releases Feed]---------')

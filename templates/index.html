@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block body %}
+<title>Python RSS</title>
+<a href="{{ url_for('upload_file') }}"> Upload Cookies </a>
+{% if feed_uri %}
+    <p>upload successful! your feed URI: <a href={{ feed_uri }} target="_blank">{{ feed_uri }}</a></p>
+    <p>Your RSS feed is updating, please wait a couple of minutes</p>
+    <p>You can manually update your feed by using this URI: <a href={{ update_uri }}>{{ update_uri }}</a></p>
+{% endif %}
+<h2>Available RSS feeds:</h2>
+{% for feed in feeds %}
+    <li><a href={{ feed[0] }}?username={{ feed[1] }} target="_blank">{{ feed[1] }}</a></p></li>
+{% endfor %}
+{% endblock %}
